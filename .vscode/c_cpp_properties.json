@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "LLVM-MinGW-xp-22.1.0",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/llvm-mingw-xp-22.1.0-msvcrt-macos-universal/i686-w64-mingw32/include/**",
+                "${workspaceFolder}/llvm-mingw-xp-22.1.0-msvcrt-macos-universal/generic-w64-mingw32/include/**",
+                "${workspaceFolder}/llvm-mingw-xp-22.1.0-msvcrt-macos-universal/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "${workspaceFolder}/llvm-mingw-xp-22.1.0-msvcrt-macos-universal/bin/i686-w64-mingw32-clang",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x86"
+        }
+    ],
+    "version": 4
+}
