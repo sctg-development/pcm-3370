@@ -1,0 +1,5 @@
+llvm-mingw-xp-22.1.0-msvcrt-macos-universal/
+dist/
+
+pcm3370_stress_test.exe
+.DS_Store
