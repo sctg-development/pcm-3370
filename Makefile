@@ -6,7 +6,7 @@
 
 # Toolchain configuration
 CC := $(shell pwd)/./llvm-mingw-xp-22.1.0-msvcrt-macos-universal/bin/i686-w64-mingw32-clang
-CFLAGS := -Wall -Wextra -std=c11 -O2 -m32 -D_WIN32_WINNT=0x0501
+CFLAGS := -Wall -Wextra -std=c11 -O2 -m32 -D_WIN32_WINNT=0x0501 -target i686-w64-mingw32
 LDFLAGS := -static -luser32 -lkernel32 -ladvapi32
 TARGET := pcm3370_stress_test.exe
 SRC_DIR := src
