@@ -6,15 +6,51 @@ on:
   workflow_dispatch:
 
 jobs:
+  setup:
+    name: Compute build metadata
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      datetime: ${{ steps.meta.outputs.datetime }}
+      # datetime_safe: colons replaced by '-' — required for Windows filenames
+      # and for git tag names (colons are not allowed in refs).
+      datetime_safe: ${{ steps.meta.outputs.datetime_safe }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Compute version and datetime
+        id: meta
+        run: |
+          VERSION=$(node -p "require('./apps/vscode/package.json').version")
+          DATETIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          DATETIME_SAFE=$(echo "$DATETIME" | tr ':' '-')
+          echo "version=$VERSION"             >> "$GITHUB_OUTPUT"
+          echo "datetime=$DATETIME"           >> "$GITHUB_OUTPUT"
+          echo "datetime_safe=$DATETIME_SAFE" >> "$GITHUB_OUTPUT"
+
   build-and-release:
     runs-on: macos-latest
+    needs: setup
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Get current date
-        id: date
-        run: echo "date=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+      - name: Generate release notes from recent commits
+        run: |
+          # Commits since the previous preview tag on this branch (or last 30)
+          PREV=$(git tag --sort=-creatordate --list 'preview/*' | head -1 || true)
+          if [ -n "$PREV" ]; then
+            LOG=$(git log --oneline --no-merges --pretty=format:"- %s (%h)" "${PREV}..HEAD")
+          else
+            LOG=$(git log --oneline --no-merges --pretty=format:"- %s (%h)" -30)
+          fi
+          {
+            printf "**Branch:** \`keypool-live\`  **Commit:** \`%s\`\n\n" "${{ github.sha }}"
+            printf "### Changes\n\n"
+            echo "$LOG"
+          } > release-notes.md
+          echo "--- Release notes preview ---"
+          cat release-notes.md
 
       - name: Make extract script executable
         run: chmod +x extract-and-remove-quarantine.sh
@@ -25,29 +61,17 @@ jobs:
       - name: Build project
         run: make
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Create GitHub pre-release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: Build-${{ steps.date.outputs.date }}
-          release_name: Build ${{ steps.date.outputs.date }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/pcm3370_stress_test.exe
-          asset_name: pcm3370_stress_test.exe
-          asset_content_type: application/octet-stream
-
-      - name: Set latest release
+          GH_TOKEN: ${{ github.token }}
+          DATETIME: ${{ needs.setup.outputs.datetime }}
+          DATETIME_SAFE: ${{ needs.setup.outputs.datetime_safe }}
         run: |
-          gh release edit "Build-${{ steps.date.outputs.date }}" --latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG="preview/${DATETIME_SAFE}"
+          TITLE="PCM-3370 ${DATETIME}"
+
+          gh release create "$TAG" \
+            --prerelease \
+            --title "$TITLE" \
+            --notes-file release-notes.md \
+            dist/*.exe
