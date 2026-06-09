@@ -8,7 +8,7 @@
 CC := $(shell pwd)/./llvm-mingw-xp-22.1.0-msvcrt-macos-universal/bin/i686-w64-mingw32-clang
 CFLAGS := -Wall -Wextra -std=c11 -O2 -m32 -D_WIN32_WINNT=0x0501 -target i686-w64-mingw32 -march=pentium3 -mno-sse2
 CFLAGS_DEBUG := -Wall -Wextra -std=c11 -g -O0 -m32 -D_WIN32_WINNT=0x0501 -target i686-w64-mingw32 -march=pentium3 -mno-sse2
-LDFLAGS := -static -lole32 -loleaut32 -lwbemuuid -luser32 -lkernel32 -ladvapi32
+LDFLAGS := -Wl,-Bstatic -lmingwex -Wl,-Bdynamic -lole32 -loleaut32 -lwbemuuid -luser32 -lkernel32 -ladvapi32 -lmsvcrt
 TARGET := pcm3370_stress_test.exe
 TARGET_DEBUG := pcm3370_stress_test_debug.exe
 SRC_DIR := src
