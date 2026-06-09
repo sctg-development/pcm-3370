@@ -171,3 +171,6 @@ This is a specialized utility for specific hardware. Contributions would need to
 
 ## Author
 Ronan Le Meillat - SCTG Development for ISMO Group Ltd. - 2026
+
+## Toolchain
+https://github.com/mon/llvm-mingw-xp
