@@ -5,3 +5,4 @@ pcm3370_stress_test.exe
 .DS_Store
 
 *.o
+pcm3370_stress_test_debug.exe

@@ -76,4 +76,5 @@ jobs:
             --prerelease \
             --title "$TITLE" \
             --notes-file release-notes.md \
-            pcm3370_stress_test.exe
+            pcm3370_stress_test.exe \
+            pcm3370_stress_test_debug.exe
