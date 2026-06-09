@@ -59,7 +59,9 @@ jobs:
         run: ./extract-and-remove-quarantine.sh
 
       - name: Build project
-        run: make
+        run: |
+          make
+          ls -l *.exe
 
       - name: Create GitHub pre-release
         env:
@@ -74,4 +76,4 @@ jobs:
             --prerelease \
             --title "$TITLE" \
             --notes-file release-notes.md \
-            dist/*.exe
+            pcm3370_stress_test.exe
