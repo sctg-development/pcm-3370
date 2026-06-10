@@ -6,3 +6,4 @@ pcm3370_stress_test.exe
 
 *.o
 pcm3370_stress_test_debug.exe
+llvm-mingw-xp-22.1.0-msvcrt-pentium3-macos-universal/

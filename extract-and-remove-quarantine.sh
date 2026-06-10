@@ -6,7 +6,7 @@
 cat llvm-mingw-xp-22.1.0-msvcrt-macos-universal.* | tar -xvJ
 
 # Path to the extracted directory
-TARGET_DIR="llvm-mingw-xp-22.1.0-msvcrt-macos-universal"
+TARGET_DIR="llvm-mingw-xp-22.1.0-msvcrt-pentium3-macos-universal"
 
 # Verify the target directory exists after extraction
 if [ ! -d "$TARGET_DIR" ]; then
