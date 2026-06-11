@@ -8,11 +8,19 @@
                 "${workspaceFolder}/llvm-mingw-xp-22.1.0-msvcrt-pentium3-macos-universal/generic-w64-mingw32/include/**",
                 "${workspaceFolder}/llvm-mingw-xp-22.1.0-msvcrt-pentium3-macos-universal/include/**"
             ],
-            "defines": [],
+            "defines": [
+                "_WIN32_WINNT=0x0501",
+                "_WIN32",
+                "__i686__"
+            ],
             "compilerPath": "${workspaceFolder}/llvm-mingw-xp-22.1.0-msvcrt-pentium3-macos-universal/bin/i686-w64-mingw32-clang",
+            "compilerArgs": [
+                "-target", "i686-w64-mingw32",
+                "-march=pentium3"
+            ],
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "windows-gcc-x86"
+            "intelliSenseMode": "windows-clang-x86"
         }
     ],
     "version": 4
