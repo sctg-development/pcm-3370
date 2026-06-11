@@ -210,6 +210,13 @@ void write_json_status(uint32_t iterations, double cpu_usage)
             g_memory_errors,
             iter_per_min);
     fflush(g_json_file);
+
+    // Mirror the same data into the self-contained HTML report
+    update_html_report(elapsed_time, iterations, cpu_usage,
+                       temp_c >= 0.0 ? temp_c : -1.0,
+                       temp_mb >= 0.0 ? temp_mb : -1.0,
+                       (unsigned)(mem.dwAvailPhys >> 20),
+                       g_memory_errors, iter_per_min);
 }
 
 static BOOL WINAPI ctrl_handler(DWORD ctrl_type)

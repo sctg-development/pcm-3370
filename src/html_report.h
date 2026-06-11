@@ -16,5 +16,9 @@
  * Function prototypes
  *****************************************************************************/
 void init_html_report(void);
+void update_html_report(const char *elapsed_time, uint32_t iteration,
+                        double cpu_usage, double cpu_temp, double mb_temp,
+                        uint32_t free_memory_mb, uint32_t memory_errors,
+                        double rate_iter_per_min);
 
 #endif // HTML_REPORT_H
