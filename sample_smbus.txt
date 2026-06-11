@@ -1,0 +1,180 @@
+Propriétés de la sonde	
+Type de la sonde	VIA 686 Internal  (ISA 6000h)
+Intrusion dans le châssis détectée	Oui
+	
+Températures	
+Carte mère	53 °C  (127 °F)
+Processeur	51 °C  (124 °F)
+Aux	21 °C  (70 °F)
+	
+Valeurs de voltage	
+Noyau CPU	0.897 V
++2.5 V	2.527 V
++3.3 V	3.278 V
++5 V	5.027 V
++12 V	[ TRIAL VERSION ]
+
+------[ Motherboard Info ]------
+
+Motherboard ID      : 03/02/2006-8606-686B-6A6LLAKDC-00
+Motherboard Model   : Unknown
+Motherboard Chipset : VIA VT8606 ProSavage PN133
+
+Award BIOS Type     : Phoenix-Award BIOS v6.00PG
+Award BIOS Message  : **** PCM-3370 BIOS V1.13 (03/02/2006) ****
+
+DMI MB Manufacturer : 
+DMI MB Product      : 8606-686B
+DMI MB Version      : 
+DMI MB Serial       : 
+DMI SYS Manufacturer: VIA Technologies, Inc.
+DMI SYS Product     : VT8605
+DMI SYS Version     : 
+DMI SYS Serial      : 
+DMI BIOS Version    : 6.00 PG
+
+ITE 87xx Port           = 00h
+ITE 87xx HWMonitor Port = 0000h
+ITE 87xx Device ID      = 0000h
+ITE 87xx Version        = 00h
+
+Winbond SuperIO Port           = 00h
+Winbond SuperIO HWMonitor Port = 0000h
+Winbond SuperIO Device ID      = FFFFh
+
+Fintek SuperIO Port           = 00h
+Fintek SuperIO HWMonitor Port = 0000h
+Fintek SuperIO Device ID      = 0000h
+
+LPC47 SuperIO HWMonitor Port = 0000h
+LPC47 SuperIO Device ID      = FFFFh
+
+------[ ACPI Temperatures & Fans ]------
+
+_TZ_.THM0._TMP             : 
+_TZ_.THM1._TMP             : 
+_TZ_.THR0._TMP             : 
+_TZ_.THR1._TMP             : 
+_TZ_.TZ00._TMP             : 
+_TZ_.TZ01._TMP             : 
+_TZ_.RTMP                  : 
+_TZ_.RFAN                  : 
+_TZ_.RFAN(0)               : 
+_TZ_.RFAN(1)               : 
+_SB_.ATKD._HID             : 
+_SB_.ATKD.TMPR             : 
+_SB_.PCI0.LPC0.EC0_.CCTV   : 
+_SB_.PCI0.LPC0.EC0_.LRPM   : 
+_SB_.PCI0.LPC0.EC0_.HRPM   : 
+_SB_.PCI0.SBRG.EC0_.ECPU   : 
+_SB_.PCI0.SBRG.EC0_.TACH(0): 
+_SB_.PCI0.SBRG.EC0_.TACH(1): 
+_SB_.PCI0.SBRG.EC0_.TAH0   : 
+_SB_.PCI0.SBRG.EC0_.TAH1   : 
+_SB_.PCI0.SBRG.EC0_.ST00   : 
+_SB_.PCI0.SBRG.EC0_.SC01   : 
+_SB_.PCI0.SBRG.EC0_.SC02   : 
+_SB_.PCI0.SBRG.EC0_.SC03   : 
+_SB_.PCI0.SBRG.EC0_.SC04   : 
+_SB_.PCI0.SBRG.EC0_.SC05   : 
+_SB_.PCI0.SBRG.EC0_.SC06   : 
+_SB_.PCI0.PIB_.EC0_.TCRT   : 
+_SB_.PCI0.SBRG.EC0_.CTPM   : 
+_SB_.PCI0.SBRG.EC__.CPUT   : 
+_SB_.PCI0.SBRG.EC__.SYST   : 
+_SB_.PCI0.LPC_.EC0_.CTMP   : 
+_SB_.PCI0.LPCB.EC0_.CTMP   : 
+_SB_.PCI0.LPC_.EC0_.TMP1   : 
+_SB_.PCI0.LPC_.EC0_.TMP2   : 
+_SB_.PCI0.LPC_.EC0_.TMPI   : 
+_SB_.PCI0.LPC_.EC0_.TMPV   : 
+_SB_.PCI0.LPCB.EC0_.A1TP   : 
+_SB_.PCI0.LPCB.EC0_.A2TP   : 
+_SB_.PCI0.LPCB.EC0_.FAN0   : 
+_SB_.PCI0.LPCB.EC__.TS1R   : 
+_SB_.PCI0.LPCB.EC__.TS2R   : 
+_SB_.PCI0.LPCB.EC__.TS3R   : 
+_SB_.PCI0.LPCB.EC__.F1FL   : 
+_SB_.PCI0.LPCB.EC__.F1FH   : 
+_SB_.PCI0.LPCB.EC__.F2FL   : 
+_SB_.PCI0.LPCB.EC__.F2FH   : 
+_SB_.PCI0.LPC_.H8EC.RTMP   : 
+_SB_.PCI0.LPC_.H8EC.LTMP   : 
+_SB_.PCI0.LPC_.H8EC.MTMP   : 
+_SB_.PCI0.LPC_.H8EC.GTMP   : 
+_SB_.PCI0.LPCB.H8EC.CTMP   : 
+_SB_.PCI0.LPCB.H8EC.DTMP   : 
+_SB_.PCI0.LPCB.H8EC.GTMP   : 
+_SB_.PCI0.LPCB.H8EC.ITMP   : 
+_SB_.PCI0.LPCB.H8EC.MTMP   : 
+_SB_.PCI0.LPCB.H8EC.STMP   : 
+_SB_.PCI0.LPCB.H8EC.PFAN   : 
+
+==========================================================================
+
+------[ 1 SMBus detected ]------
+
+------[ SMBus #0 ]------
+
+SMBus Type  : Intel / VIA / ServerWorks / SMSC / ATI
+SMBus Port  : 5000
+Can Have SPD: Yes
+Scan Type   : Full
+
+------[ SMBus Device B00-D2D ]------
+
+  0000  01 00 12 FF FF 00 00 50 AD 3D 00 95 00 00 00 00  .......P.=......
+  0010  00 00 00 7D 09 DB A6 80 00 00 00 00 00 CA F9 7D  ...}...........}
+  0020  BB C0 4B D4 CE CB CD 7F 7F 00 00 FF 00 D6 C1 D4  ..K...........
+  0030  BF CD BA FF 00 4E B6 CD 79 FF 00 39 1D FF 00 A2  .....N..y..9....
+  0040  01 00 12 FF FF 00 00 50 AD 3D 00 55 00 00 00 00  .......P.=.U....
+  0050  00 00 00 0E 43 DB 35 81 00 00 00 00 00 CA F9 7D  ....C.5........}
+  0060  BC C0 4B D4 CE CB CD 7F 7F 00 00 FF 00 D6 C1 D4  ..K...........
+  0070  BF CD BA FF 00 4E B6 CD 79 FF 00 39 1D FF 00 A2  .....N..y..9....
+  0080  01 00 00 FF FF 00 00 50 AD 3D 00 55 00 00 00 00  .......P.=.U....
+  0090  00 00 00 43 3F DB CA 81 00 00 00 00 00 CA F9 7D  ...C?..........}
+  00A0  BC C0 4B D4 CE CB CD 7F 7F 00 00 FF 00 D6 C1 D4  ..K...........
+  00B0  BF CD BA FF 00 4E B6 CD 79 FF 00 39 1D FF 00 A2  .....N..y..9....
+  00C0  01 00 00 FF FF 00 00 50 AD 2D 00 15 00 00 00 00  .......P.-......
+  00D0  00 00 00 43 43 DB 56 81 00 00 00 00 00 CA F9 7D  ...CC.V........}
+  00E0  BC C0 4B D4 CE CB CD 7F 7F 00 00 FF 00 D6 C1 D4  ..K...........
+  00F0  BF CD BA FF 00 4E B6 CD 79 FF 00 39 1D FF 00 A2  .....N..y..9....
+
+------[ SMBus Device B00-D2D ]------
+
+  0000  FF01 FF00 FF00 FFFF FFFF FF00 FF00 FF50 FFAD FF2D FF00 FF55 FF00 FF00 FF00 FF00 
+  0010  FF00 FF00 FF00 FF43 FF29 FFDB FF49 FF81 FF00 FF00 FF00 FF00 FF00 FFCA FFF9 FF7D 
+  0020  FFBC FFC0 FF4B FFD4 FFCE FFCB FFCD FF7F FF7F FF00 FF00 FFFF FF00 FFD6 FFC1 FFD4 
+  0030  FFBF FFCD FFBA FFFF FF00 FF4E FFB6 FFCD FF79 FFFF FF00 FF39 FF1D FFFF FF00 FFA2 
+  0040  FF01 FF00 FF00 FFFF FFFF FF00 FF00 FF50 FFAD FF2D FF00 FF15 FF00 FF00 FF00 FF00 
+  0050  FF00 FF00 FF00 FF7D FF0C FFDB FFD6 FF80 FF00 FF00 FF00 FF00 FF00 FFCA FFF9 FF7D 
+  0060  FFBC FFC0 FF4B FFD4 FFCE FFCB FFCD FF7F FF7F FF00 FF00 FFFF FF00 FFD6 FFC1 FFD4 
+  0070  FFBF FFCD FFBA FFFF FF00 FF4E FFB6 FFCD FF79 FFFF FF00 FF39 FF1D FFFF FF00 FFA2 
+  0080  FF01 FF00 FF00 FFFF FFFF FF00 FF00 FF50 FFAD FF2D FF00 FF15 FF00 FF00 FF00 FF00 
+  0090  FF00 FF00 FF00 FF43 FF2A FFDB FF62 FF81 FF00 FF00 FF00 FF00 FF00 FFCA FFF9 FF7D 
+  00A0  FFBC FFC0 FF4B FFD4 FFCE FFCB FFCD FF7F FF7F FF00 FF00 FFFF FF00 FFD6 FFC1 FFD4 
+  00B0  FFBF FFCD FFBA FFFF FF00 FF4E FFB6 FFCD FF79 FFFF FF00 FF39 FF1D FFFF FF00 FFA2 
+  00C0  FF01 FF00 FF00 FFFF FFFF FF00 FF00 FF50 FFAD FF2D FF00 FF15 FF00 FF00 FF00 FF00 
+  00D0  FF00 FF00 FF00 FF7D FF0E FFDB FFF8 FF01 FF00 FF00 FF00 FF00 FF00 FFCA FFF9 FF7D 
+  00E0  FFBC FFC0 FF4B FFD4 FFCE FFCB FFCD FF7F FF7F FF00 FF00 FFFF FF00 FFD6 FFC1 FFD4 
+  00F0  FFBF FFCD FFBA FFFF FF00 FF4E FFB6 FFCD FF79 FFFF FF00 FF39 FF1D FFFF FF00 FFA2 
+
+------[ SMBus Device B00-D50 ]------
+
+  0000  80 08 04 0D 09 02 40 00 01 75 54 00 82 10 00 01  ......@..uT.....
+  0010  8F 04 06 01 01 00 0E A0 60 00 00 14 0F 14 2D 20  ........`.....- 
+  0020  15 08 15 08 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  0030  00 00 00 00 00 00 00 00 00 00 00 00 00 00 12 BA  ................
+  0040  CE 00 00 00 00 00 00 00 01 4D 34 20 36 34 53 33  .........M4 64S3
+  0050  32 35 34 43 54 53 2D 4C 37 41 20 53 43 09 02 1F  254CTS-L7A SC...
+  0060  59 92 0B FF 4C 39 41 31 30 30 4E FF FF FF FF FF  Y...L9A100N.....
+  0070  FF FF FF FF FF FF FF FF FF FF FF FF FF FF 64 CF  ..............d.
+  0080  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF  ................
+  0090  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF  ................
+  00A0  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF  ................
+  00B0  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF  ................
+  00C0  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF  ................
+  00D0  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF  ................
+  00E0  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF  ................
+  00F0  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF  ................
+
