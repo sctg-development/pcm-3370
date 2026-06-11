@@ -34,58 +34,8 @@ typedef LONG (NTAPI *PNtSystemDebugControl)(
 static PNtSystemDebugControl g_NtSysDbg = NULL;
 int g_via686b_ready = 0;
 
-/* ---- CPU snapshot for GetSystemTimes-based measurement -------------------- */
-typedef struct {
-    ULONGLONG idle;
-    ULONGLONG total;
-} CpuSnapshot;
-
-/******************************************************************************
- * FILETIME -> ULONGLONG (100-ns intervals)
- *****************************************************************************/
-static ULONGLONG ft_to_ull(const FILETIME *ft)
-{
-    return ((ULONGLONG)ft->dwHighDateTime << 32) | (ULONGLONG)ft->dwLowDateTime;
-}
-
-/******************************************************************************
- * CPU usage via GetSystemTimes (XP+)
- *****************************************************************************/
-static double get_cpu_usage(void)
-{
-    static CpuSnapshot prev = {0, 0};
-    FILETIME idle_ft, kernel_ft, user_ft;
-    ULONGLONG idle, total, d_idle, d_total;
-    double pct;
-
-    if (!GetSystemTimes(&idle_ft, &kernel_ft, &user_ft))
-        return 0.0;
-
-    idle = ft_to_ull(&idle_ft);
-    total = ft_to_ull(&kernel_ft) + ft_to_ull(&user_ft);
-
-    if (prev.total == 0)
-    {
-        prev.idle = idle;
-        prev.total = total;
-        return 0.0;
-    }
-
-    d_idle = idle - prev.idle;
-    d_total = total - prev.total;
-    prev.idle = idle;
-    prev.total = total;
-
-    if (d_total == 0)
-        return 0.0;
-
-    pct = 100.0 * (1.0 - (double)d_idle / (double)d_total);
-    if (pct < 0.0)
-        pct = 0.0;
-    if (pct > 100.0)
-        pct = 100.0;
-    return pct;
-}
+/* 0 = not probed, 1 = NtSystemDebugControl, 2 = direct IN instruction */
+static int g_io_access_mode = 0;
 
 /******************************************************************************
  * WMI temperature: open one persistent session to ROOT\WMI
@@ -201,17 +151,27 @@ void acquire_debug_privilege(void)
     CloseHandle(hToken);
 }
 
-static BYTE read_io_byte(ULONG port)
+/* Returns TRUE on success, FALSE if the NtSystemDebugControl call itself fails */
+static BOOL read_io_byte_nt(ULONG port, BYTE *out)
 {
     SYSDBG_IO_SPACE ios;
-    BYTE val = 0xFFu;
     ULONG ret = 0;
+    LONG status;
 
+    *out = 0;
     ios.BusAddress = (ULONGLONG)port;
-    ios.Buffer     = &val;
+    ios.Buffer     = out;
     ios.Request    = 1;
     ios.Completed  = 0;
-    g_NtSysDbg(SYSDBG_READ_IO, &ios, sizeof(ios), NULL, 0, &ret);
+    status = g_NtSysDbg(SYSDBG_READ_IO, &ios, sizeof(ios), NULL, 0, &ret);
+    return (BOOL)(status >= 0); /* NT_SUCCESS */
+}
+
+static BYTE read_via686b(ULONG port)
+{
+    BYTE val = 0xFF;
+    if (g_io_access_mode == 1)
+        read_io_byte_nt(port, &val);
     return val;
 }
 
@@ -220,34 +180,36 @@ int init_via686b(void)
     HMODULE hNtdll = GetModuleHandleA("ntdll.dll");
     BYTE probe;
 
-    if (!hNtdll)
-        return 0;
-    g_NtSysDbg = (PNtSystemDebugControl)
-        GetProcAddress(hNtdll, "NtSystemDebugControl");
+    if (hNtdll)
+        g_NtSysDbg = (PNtSystemDebugControl)
+            GetProcAddress(hNtdll, "NtSystemDebugControl");
+
     if (!g_NtSysDbg)
         return 0;
 
     acquire_debug_privilege();
 
-    /* 0xFF means the port returned all-ones (access denied or not present) */
-    probe = read_io_byte(VIA686B_BASE + VIA686B_REG_TEMP);
-    if (probe == 0xFFu)
+    /*
+     * Probe via NtSystemDebugControl: success is determined by the NTSTATUS
+     * return value, not the register content.  A valid sensor can legitimately
+     * read 0xFF (-1 °C signed), so the old "if (probe == 0xFF) fail" logic was
+     * wrong — it rejected the sensor whenever NtSystemDebugControl itself
+     * failed (leaving val at 0xFF) or at cold temperatures.
+     */
+    if (!read_io_byte_nt(VIA686B_BASE + VIA686B_REG_TEMP, &probe))
         return 0;
 
-    g_via686b_ready = 1;
+    g_io_access_mode = 1;
+    g_via686b_ready  = 1;
     return 1;
 }
 
 static double get_via686b_temperature(void)
 {
-    BYTE raw;
     if (!g_via686b_ready)
         return -1.0;
-    raw = read_io_byte(VIA686B_BASE + VIA686B_REG_TEMP);
-    if (raw == 0xFFu)
-        return -1.0;
     /* VIA 686B stores temperature as 8-bit two's-complement Celsius */
-    return (double)(signed char)raw;
+    return (double)(signed char)read_via686b(VIA686B_BASE + VIA686B_REG_TEMP);
 }
 
 /******************************************************************************
