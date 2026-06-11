@@ -50,6 +50,33 @@ static DWORD g_start_tick = 0;
 static IWbemServices *g_wmi_svc = NULL;
 static int g_wmi_ready = 0;
 
+/* ---- VIA VT82C686B hardware monitor (ISA-mapped, base confirmed by AIDA64) */
+/* ACPI thermal zones are unpopulated on PCM-3370; read the VIA 686B directly */
+/* via NtSystemDebugControl(SysDbgReadIoSpace) which only needs SeDebugPriv.  */
+#define VIA686B_BASE      0x6000u
+#define VIA686B_REG_TEMP  0x20u   /* CPU temperature,    8-bit signed °C */
+#define VIA686B_REG_TEMP2 0x21u   /* System temperature, 8-bit signed °C */
+#define SYSDBG_READ_IO    14      /* SysDbgReadIoSpace command code       */
+
+typedef struct {
+    ULONGLONG BusAddress; /* I/O port address (32-bit port in 64-bit field) */
+    PVOID     Buffer;     /* receives the byte/word/dword                   */
+    ULONG     Request;    /* transfer width in bytes: 1, 2, or 4            */
+    ULONG     Completed;  /* bytes transferred (set by kernel)              */
+} SYSDBG_IO_SPACE;
+
+typedef LONG (NTAPI *PNtSystemDebugControl)(
+    ULONG  Command,
+    PVOID  InputBuffer,
+    ULONG  InputLength,
+    PVOID  OutputBuffer,
+    ULONG  OutputLength,
+    PULONG ReturnLength
+);
+
+static PNtSystemDebugControl g_NtSysDbg     = NULL;
+static int                   g_via686b_ready = 0;
+
 /* ---- CPU snapshot for GetSystemTimes-based measurement -------------------- */
 typedef struct
 {
@@ -65,6 +92,8 @@ void print_header(void);
 void print_status(uint32_t iterations, double cpu_usage);
 double get_cpu_usage(void);
 int init_temperature(void);
+int init_via686b(void);
+static double get_via686b_temperature(void);
 double get_cpu_temperature(void);
 void infinite_loop(void);
 
@@ -183,7 +212,7 @@ double get_cpu_temperature(void)
     HRESULT hr;
 
     if (!g_wmi_ready || !g_wmi_svc)
-        return -1.0;
+        return get_via686b_temperature();
 
     hr = IWbemServices_ExecQuery(g_wmi_svc,
                                  L"WQL",
@@ -209,7 +238,83 @@ double get_cpu_temperature(void)
         IWbemClassObject_Release(pObj);
     }
     IEnumWbemClassObject_Release(pEnum);
+    if (temp < 0.0)
+        temp = get_via686b_temperature();
     return temp;
+}
+
+/******************************************************************************
+ * VIA VT82C686B hardware monitor — direct ISA I/O via NtSystemDebugControl
+ *
+ * SysDbgReadIoSpace (code 14) is available on XP+ with SeDebugPrivilege.
+ * No kernel driver or extra files needed.
+ *****************************************************************************/
+static void acquire_debug_privilege(void)
+{
+    HANDLE hToken;
+    TOKEN_PRIVILEGES tp;
+    LUID luid;
+
+    if (!OpenProcessToken(GetCurrentProcess(),
+                          TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+        return;
+    if (LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luid))
+    {
+        tp.PrivilegeCount           = 1;
+        tp.Privileges[0].Luid       = luid;
+        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+        AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(tp), NULL, NULL);
+    }
+    CloseHandle(hToken);
+}
+
+static BYTE read_io_byte(ULONG port)
+{
+    SYSDBG_IO_SPACE ios;
+    BYTE val = 0xFFu;
+    ULONG ret = 0;
+
+    ios.BusAddress = (ULONGLONG)port;
+    ios.Buffer     = &val;
+    ios.Request    = 1;
+    ios.Completed  = 0;
+    g_NtSysDbg(SYSDBG_READ_IO, &ios, sizeof(ios), NULL, 0, &ret);
+    return val;
+}
+
+int init_via686b(void)
+{
+    HMODULE hNtdll = GetModuleHandleA("ntdll.dll");
+    BYTE probe;
+
+    if (!hNtdll)
+        return 0;
+    g_NtSysDbg = (PNtSystemDebugControl)
+        GetProcAddress(hNtdll, "NtSystemDebugControl");
+    if (!g_NtSysDbg)
+        return 0;
+
+    acquire_debug_privilege();
+
+    /* 0xFF means the port returned all-ones (access denied or not present) */
+    probe = read_io_byte(VIA686B_BASE + VIA686B_REG_TEMP);
+    if (probe == 0xFFu)
+        return 0;
+
+    g_via686b_ready = 1;
+    return 1;
+}
+
+static double get_via686b_temperature(void)
+{
+    BYTE raw;
+    if (!g_via686b_ready)
+        return -1.0;
+    raw = read_io_byte(VIA686B_BASE + VIA686B_REG_TEMP);
+    if (raw == 0xFFu)
+        return -1.0;
+    /* VIA 686B stores temperature as 8-bit two's-complement Celsius */
+    return (double)(signed char)raw;
 }
 
 /******************************************************************************
@@ -432,7 +537,10 @@ void print_header(void)
     printf(" MEM : %u MB total  /  %u MB free\n",
            (unsigned)(mem.dwTotalPhys >> 20),
            (unsigned)(mem.dwAvailPhys >> 20));
-    printf(" TEMP: %s\n", g_wmi_ready ? "WMI ACPI thermal zone" : "N/A (no ACPI sensor)");
+    printf(" TEMP: %s\n",
+           g_wmi_ready     ? "WMI ACPI thermal zone" :
+           g_via686b_ready ? "VIA VT82C686B ISA 0x6000 (direct)" :
+                             "N/A (no sensor accessible)");
     printf("============================================================\n");
     printf(" Tests: CPU-FP  CPU-INT  CPU-Branch  Cache  Memory(%u patterns)\n",
            (unsigned)NUM_PATTERNS);
@@ -512,8 +620,10 @@ int main(void)
 {
     g_start_tick = GetTickCount();
 
-    /* Initialize WMI temperature before printing header */
+    /* Try WMI ACPI first; fall back to VIA 686B direct ISA access */
     init_temperature();
+    if (!g_wmi_ready)
+        init_via686b();
 
     print_header();
     infinite_loop();
