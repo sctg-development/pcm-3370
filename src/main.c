@@ -202,8 +202,7 @@ int main(int argc, char **argv)
         }
     }
 
-    /* Temperature monitoring is now handled by mock implementation */
-    (void)get_cpu_temperature(); // Initialize mock temperature
+    init_temperature();
 
     print_header();
     infinite_loop();

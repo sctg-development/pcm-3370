@@ -53,15 +53,19 @@ void print_header(void)
     log_message(" MEM : %u MB total  /  %u MB free\n",
            (unsigned)(mem.dwTotalPhys >> 20),
            (unsigned)(mem.dwAvailPhys >> 20));
-    log_message(" TEMP: Mock implementation (fixed 20.0C)\n");
+    if (g_via686b_ready)
+        log_message(" TEMP: VIA VT82C686B  ISA 0x%04X  (PortTalk.sys / NtSysDbg)\n",
+                    VIA686B_BASE);
+    else
+        log_message(" TEMP: VIA VT82C686B  not accessible (run as admin + PortTalk.sys)\n");
     log_message("============================================================\n");
     log_message(" Tests: CPU-FP  CPU-INT  CPU-Branch  Cache  Memory(%u patterns)\n",
            (unsigned)NUM_PATTERNS);
     log_message(" NOTE: No disk I/O - compact flash protected\n");
     log_message(" Ctrl+C to stop\n");
     log_message("============================================================\n\n");
-    log_message(" %-9s %-7s %-7s %-7s %-10s %-10s %-10s\n",
-           "Elapsed", "Iter", "CPU%", "Temp", "FreeMem", "MemErr", "Rate");
+    log_message(" %-9s %-7s %-7s %-7s %-7s %-10s %-10s %-10s\n",
+           "Elapsed", "Iter", "CPU%", "CPUTemp", "MBTemp", "FreeMem", "MemErr", "Rate");
     log_message("------------------------------------------------------------\n");
 }
 
@@ -82,16 +86,27 @@ void print_status(uint32_t iterations, double cpu_usage)
                               ? ((double)iterations / (double)elapsed_s * 60.0)
                               : 0.0;
     double temp_c = get_cpu_temperature();
+    double temp_mb = get_mb_temperature();
 
     GlobalMemoryStatus(&mem);
 
-    if (temp_c >= 0.0)
-        log_message(" %02u:%02u:%02u  %-7u %5.1f%%  %5.1fC  %4u MB    %-10u %.1f/min\n",
+    if (temp_c >= 0.0 && temp_mb >= 0.0)
+        log_message(" %02u:%02u:%02u  %-7u %5.1f%%  %5.1fC  %5.1fC  %4u MB    %-10u %.1f/min\n",
+               h, m, s, iterations, cpu_usage, temp_c, temp_mb,
+               (unsigned)(mem.dwAvailPhys >> 20),
+               g_memory_errors, iter_per_min);
+    else if (temp_c >= 0.0)
+        log_message(" %02u:%02u:%02u  %-7u %5.1f%%  %5.1fC  N/A    %4u MB    %-10u %.1f/min\n",
                h, m, s, iterations, cpu_usage, temp_c,
                (unsigned)(mem.dwAvailPhys >> 20),
                g_memory_errors, iter_per_min);
+    else if (temp_mb >= 0.0)
+        log_message(" %02u:%02u:%02u  %-7u %5.1f%%  N/A    %5.1fC  %4u MB    %-10u %.1f/min\n",
+               h, m, s, iterations, cpu_usage, temp_mb,
+               (unsigned)(mem.dwAvailPhys >> 20),
+               g_memory_errors, iter_per_min);
     else
-        log_message(" %02u:%02u:%02u  %-7u %5.1f%%  N/A    %4u MB    %-10u %.1f/min\n",
+        log_message(" %02u:%02u:%02u  %-7u %5.1f%%  N/A    N/A    %4u MB    %-10u %.1f/min\n",
                h, m, s, iterations, cpu_usage,
                (unsigned)(mem.dwAvailPhys >> 20),
                g_memory_errors, iter_per_min);
