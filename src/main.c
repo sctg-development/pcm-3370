@@ -39,13 +39,21 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 
 /* ---- Global state --------------------------------------------------------- */
 volatile uint32_t g_memory_errors = 0;
 DWORD g_start_tick = 0;
 int   g_verbose    = 0;
 int   g_log_enabled = 0;
-static FILE *g_log_file = NULL;
+int   g_report_enabled = 0;
+FILE *g_log_file = NULL;
+FILE *g_json_file = NULL;
+FILE *g_html_file = NULL;
+time_t g_timestamp = 0;
+char g_timestamp_str[64] = {0};
+char g_json_filename[80] = {0};
+char g_html_filename[80] = {0};
 
 /* ---- Module includes ------------------------------------------------------ */
 #include "temperature.h"
@@ -53,6 +61,7 @@ static FILE *g_log_file = NULL;
 #include "memory_stress.h"
 #include "cache_stress.h"
 #include "display.h"
+#include "html_report.h"
 #include <stdarg.h>
 #include <time.h>
 
@@ -60,6 +69,8 @@ static FILE *g_log_file = NULL;
 void infinite_loop(void);
 static double get_cpu_usage(void);
 void log_message(const char *format, ...);
+static void print_help(void);
+void write_json_status(uint32_t iterations, double cpu_usage);
 
 /* ---- CPU snapshot for GetSystemTimes-based measurement -------------------- */
 typedef struct {
@@ -137,6 +148,7 @@ void infinite_loop(void)
             /* Single CPU measurement per status update - fixes the 0.0% bug  */
             double cpu = get_cpu_usage();
             print_status(iter, cpu);
+            write_json_status(iter, cpu);
         }
 
         Sleep(50);
@@ -164,10 +176,68 @@ void log_message(const char *format, ...)
     va_end(args);
 }
 
+/******************************************************************************
+ * Write JSON status data to report file
+ *****************************************************************************/
+void write_json_status(uint32_t iterations, double cpu_usage)
+{
+    if (!g_report_enabled || !g_json_file)
+        return;
+
+    MEMORYSTATUS mem;
+    DWORD elapsed_s = (GetTickCount() - g_start_tick) / 1000u;
+    uint32_t h = elapsed_s / 3600u;
+    uint32_t m = (elapsed_s % 3600u) / 60u;
+    uint32_t s = elapsed_s % 60u;
+    double iter_per_min = (elapsed_s > 0)
+                              ? ((double)iterations / (double)elapsed_s * 60.0)
+                              : 0.0;
+    double temp_c = get_cpu_temperature();
+    double temp_mb = get_mb_temperature();
+
+    GlobalMemoryStatus(&mem);
+
+    // Format elapsed time as HH:MM:SS
+    char elapsed_time[16];
+    snprintf(elapsed_time, sizeof(elapsed_time), "%02u:%02u:%02u", h, m, s);
+
+    // Write JSON data (one complete JSON object per line - NDJSON format)
+    fprintf(g_json_file, "{\"elapsed_time\":\"%s\",\"iteration\":%u,\"cpu_usage\":%.1f,\"cpu_temp\":%.1f,\"mb_temp\":%.1f,\"free_memory_mb\":%u,\"memory_errors\":%u,\"rate_iter_per_min\":%.1f}\n",
+            elapsed_time, iterations, cpu_usage,
+            temp_c >= 0.0 ? temp_c : -1.0,
+            temp_mb >= 0.0 ? temp_mb : -1.0,
+            (unsigned)(mem.dwAvailPhys >> 20),
+            g_memory_errors,
+            iter_per_min);
+    fflush(g_json_file);
+}
+
 static BOOL WINAPI ctrl_handler(DWORD ctrl_type)
 {
     (void)ctrl_type;
     return FALSE;
+}
+
+/******************************************************************************
+ * Print help information
+ *****************************************************************************/
+static void print_help(void)
+{
+    printf("PCM-3370 Stress Test Program - Usage\n");
+    printf("\n");
+    printf("Usage: pcm3370_stress [options]\n");
+    printf("\n");
+    printf("Options:\n");
+    printf("  --verbose    Enable verbose output\n");
+    printf("  --log        Enable logging to file\n");
+    printf("  --report     Enable report generation (JSON + HTML)\n");
+    printf("  -h, --help   Show this help message\n");
+    printf("\n");
+    printf("Description:\n");
+    printf("  Comprehensive stress test for PCM-3370 single-board computer\n");
+    printf("  Tests CPU, memory, and cache subsystems continuously\n");
+    printf("  Designed for Windows XP 32-bit environment\n");
+    printf("\n");
 }
 
 /******************************************************************************
@@ -182,6 +252,13 @@ int main(int argc, char **argv)
             g_verbose = 1;
         else if (strcmp(argv[i], "--log") == 0)
             g_log_enabled = 1;
+        else if (strcmp(argv[i], "--report") == 0)
+            g_report_enabled = 1;
+        else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
+        {
+            print_help();
+            return 0;
+        }
     }
 
     g_start_tick = GetTickCount();
@@ -197,7 +274,7 @@ int main(int argc, char **argv)
 
         // Create filename with timestamp
         char log_filename[80];
-        snprintf(log_filename, sizeof(log_filename), "[%s].log", timestamp_str);
+        snprintf(log_filename, sizeof(log_filename), "%s.log", timestamp_str);
 
         g_log_file = fopen(log_filename, "a");
         if (!g_log_file)
@@ -219,6 +296,45 @@ int main(int argc, char **argv)
                 clean_time[len - 1] = '\0';
             log_message("\n\n=== Log started: %s ===\n", clean_time);
             fflush(g_log_file);
+        }
+    }
+
+    // Initialize report if enabled
+    if (g_report_enabled)
+    {
+        // Generate Unix timestamp for filename
+        g_timestamp = time(NULL);
+        snprintf(g_timestamp_str, sizeof(g_timestamp_str), "%ld", g_timestamp);
+
+        // Create filenames with timestamp
+        snprintf(g_json_filename, sizeof(g_json_filename), "%s.ndjson", g_timestamp_str);
+        snprintf(g_html_filename, sizeof(g_html_filename), "%s.html", g_timestamp_str);
+
+        // Open JSON file for writing
+        g_json_file = fopen(g_json_filename, "w");
+        if (!g_json_file)
+        {
+            log_message("Warning: Could not open %s for writing\n", g_json_filename);
+            g_report_enabled = 0;
+        }
+        else
+        {
+            // NDJSON format - no array brackets, just newline-delimited JSON objects
+            // File starts empty, we'll append complete JSON objects line by line
+            fflush(g_json_file);
+        }
+
+        // Open HTML file for writing
+        g_html_file = fopen(g_html_filename, "w");
+        if (!g_html_file)
+        {
+            log_message("Warning: Could not open %s for writing\n", g_html_filename);
+            // Don't disable report entirely, just HTML part
+        }
+        else
+        {
+            // Initialize HTML report
+            init_html_report();
         }
     }
 

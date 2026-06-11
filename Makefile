@@ -1,7 +1,7 @@
 # Makefile for PCM-3370 Stress Test Program
 # Target: Windows XP 32-bit compatible executable
 # Toolchain: LLVM-MinGW for Windows XP
-# Author: Cline
+# Author: Ronan Le Meillat
 # Date: 2026
 #
 # Copyright (c) 2026 Ronan LE MEILLAT - SCTG Development for ISMO Group Ltd.

@@ -52,7 +52,6 @@ Comprehensive stress testing utility for the PCM-3370 single-board computer runn
 
 ### Dependencies
 - Windows XP 32-bit API headers
-- Standard C library (msvcrt)
 - Windows Management Instrumentation (WMI) for temperature monitoring
 - Required libraries: ole32, oleaut32, wbemuuid, user32, kernel32, advapi32
 
@@ -61,7 +60,7 @@ Comprehensive stress testing utility for the PCM-3370 single-board computer runn
 1. **Prerequisites**:
    - Install LLVM-MinGW toolchain for Windows XP (version 22.1.0)
    - Ensure GNU Make is available in your PATH
-   - Toolchain should be in `./llvm-mingw-xp-22.1.0-msvcrt-macos-universal/bin/`
+   - Toolchain should be in `./llvm-mingw-xp-22.1.0-msvcrt-pentium3-macos-universal/bin/`
 
 2. **Build Command**:
    ```bash
