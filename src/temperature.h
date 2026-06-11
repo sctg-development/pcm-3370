@@ -18,11 +18,13 @@
 /* External variables */
 extern int g_wmi_ready;
 extern int g_via686b_ready;
+extern int g_verbose;
 
 /* Function prototypes */
 int init_temperature(void);
 double get_cpu_temperature(void);
 int init_via686b(void);
 void acquire_debug_privilege(void);
+void cleanup_via686b(void);
 
 #endif /* TEMPERATURE_H */

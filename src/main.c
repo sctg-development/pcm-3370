@@ -18,10 +18,14 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 /* ---- Global state --------------------------------------------------------- */
 volatile uint32_t g_memory_errors = 0;
 DWORD g_start_tick = 0;
+int   g_verbose    = 0;
+int   g_log_enabled = 0;
+static FILE *g_log_file = NULL;
 
 /* ---- Module includes ------------------------------------------------------ */
 #include "temperature.h"
@@ -29,10 +33,13 @@ DWORD g_start_tick = 0;
 #include "memory_stress.h"
 #include "cache_stress.h"
 #include "display.h"
+#include <stdarg.h>
+#include <time.h>
 
 /* ---- Function prototypes -------------------------------------------------- */
 void infinite_loop(void);
 static double get_cpu_usage(void);
+void log_message(const char *format, ...);
 
 /* ---- CPU snapshot for GetSystemTimes-based measurement -------------------- */
 typedef struct {
@@ -117,18 +124,94 @@ void infinite_loop(void)
 }
 
 /******************************************************************************
+ * Logging function - writes to both console and [timestamp].log if enabled
+ *****************************************************************************/
+void log_message(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    // Always print to console
+    vprintf(format, args);
+
+    // Also write to log file if logging is enabled
+    if (g_log_enabled && g_log_file)
+    {
+        vfprintf(g_log_file, format, args);
+        fflush(g_log_file);
+    }
+
+    va_end(args);
+}
+
+static BOOL WINAPI ctrl_handler(DWORD ctrl_type)
+{
+    (void)ctrl_type;
+    return FALSE;
+}
+
+/******************************************************************************
  * Entry point
  *****************************************************************************/
-int main(void)
+int main(int argc, char **argv)
 {
-    g_start_tick = GetTickCount();
+    int i;
+    for (i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "--verbose") == 0)
+            g_verbose = 1;
+        else if (strcmp(argv[i], "--log") == 0)
+            g_log_enabled = 1;
+    }
 
-    /* Try WMI ACPI first; fall back to VIA 686B direct ISA access */
-    init_temperature();
-    if (!g_wmi_ready)
-        init_via686b();
+    g_start_tick = GetTickCount();
+    SetConsoleCtrlHandler(ctrl_handler, TRUE);
+
+    // Initialize logging if enabled
+    if (g_log_enabled)
+    {
+        // Generate Unix timestamp for filename
+        time_t now = time(NULL);
+        char timestamp_str[64];
+        snprintf(timestamp_str, sizeof(timestamp_str), "%ld", now);
+
+        // Create filename with timestamp
+        char log_filename[80];
+        snprintf(log_filename, sizeof(log_filename), "[%s].log", timestamp_str);
+
+        g_log_file = fopen(log_filename, "a");
+        if (!g_log_file)
+        {
+            log_message("Warning: Could not open %s for writing\n", log_filename);
+            g_log_enabled = 0;
+        }
+        else
+        {
+            // Write header to log file
+            const char *time_str = ctime(&now);
+            // Remove newline from ctime output
+            char clean_time[26];
+            strncpy(clean_time, time_str, sizeof(clean_time) - 1);
+            clean_time[sizeof(clean_time) - 1] = '\0';
+            // Remove trailing newline if present
+            size_t len = strlen(clean_time);
+            if (len > 0 && clean_time[len - 1] == '\n')
+                clean_time[len - 1] = '\0';
+            log_message("\n\n=== Log started: %s ===\n", clean_time);
+            fflush(g_log_file);
+        }
+    }
+
+    /* Temperature monitoring is now handled by mock implementation */
+    (void)get_cpu_temperature(); // Initialize mock temperature
 
     print_header();
     infinite_loop();
+
+
+
+    if (g_log_file)
+        fclose(g_log_file);
+
     return 0;
 }

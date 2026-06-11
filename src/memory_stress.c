@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+void log_message(const char *format, ...);
+
 /* ---- Memory test patterns ------------------------------------------------- */
 const uint32_t TEST_PATTERNS[] = {
     0x5555AAAAu, 0xAAAA5555u, /* alternating nibbles */
@@ -44,7 +46,7 @@ void memory_stress_test(void)
     }
     if (block == NULL)
     {
-        printf("Warning: memory allocation failed\n");
+         log_message("Warning: memory allocation failed\n");
         return;
     }
 
@@ -61,7 +63,7 @@ void memory_stress_test(void)
             if (*(uint32_t *)(block + i) != pat)
             {
                 g_memory_errors++;
-                printf("MEM ERR offset +%u  expected %08X  got %08X\n",
+                 log_message("MEM ERR offset +%u  expected %08X  got %08X\n",
                        i, pat, *(uint32_t *)(block + i));
             }
         }
